@@ -1,6 +1,3 @@
-// Fix: Add vite client types to provide definitions for import.meta.env
-/// <reference types="vite/client" />
-
 export interface Report {
   id: string;
   title: string;
