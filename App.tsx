@@ -7,7 +7,7 @@ import UserDashboard from './components/UserDashboard';
 import LoginScreen from './components/LoginScreen';
 import AdminPasswordModal from './components/AdminPasswordModal';
 import { db } from './firebase';
-import { ref, onValue, set, update, remove } from 'firebase/database';
+import { ref, onValue, set, update, remove, DataSnapshot } from 'firebase/database';
 
 const DEFAULT_THEME: ThemeSettings = {
   primaryColor: '#0b3d66',
@@ -21,7 +21,8 @@ const DEFAULT_THEME: ThemeSettings = {
 const ADMIN_PASSWORD = '2345';
 
 // Verifica se as variáveis de ambiente do Firebase estão configuradas
-const isFirebaseConfigured = import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_DATABASE_URL;
+// Fix: Cast `import.meta` to `any` to access the `env` property. This is necessary because the TypeScript environment is not configured with Vite's client types.
+const isFirebaseConfigured = (import.meta as any).env.VITE_FIREBASE_API_KEY && (import.meta as any).env.VITE_FIREBASE_DATABASE_URL;
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -50,7 +51,7 @@ const App: React.FC = () => {
     };
 
     const usersRef = ref(db, 'users');
-    onValue(usersRef, (snapshot) => {
+    onValue(usersRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       const loadedUsers = data ? Object.values(data) : [];
       setUsers(loadedUsers as User[]);
@@ -59,7 +60,7 @@ const App: React.FC = () => {
     });
 
     const reportsRef = ref(db, 'reports');
-    onValue(reportsRef, (snapshot) => {
+    onValue(reportsRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       const loadedReports = data ? Object.values(data) : [];
       setReports(loadedReports as Report[]);
@@ -68,7 +69,7 @@ const App: React.FC = () => {
     });
 
     const themeRef = ref(db, 'theme');
-    onValue(themeRef, (snapshot) => {
+    onValue(themeRef, (snapshot: DataSnapshot) => {
       const data = snapshot.val();
       setTheme(data || DEFAULT_THEME);
       themeLoaded = true;
@@ -83,34 +84,15 @@ const App: React.FC = () => {
   
   if (!isFirebaseConfigured) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="max-w-3xl p-8 text-left bg-white rounded-lg shadow-md border border-red-200">
-          <h1 className="text-2xl font-bold text-red-600 mb-4 text-center">Erro de Configuração do Firebase</h1>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="max-w-2xl p-8 text-center bg-white rounded-lg shadow-md border border-red-200">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Erro de Configuração</h1>
           <p className="text-gray-700">
-            A conexão com o banco de dados Firebase não foi configurada. Para que o aplicativo funcione, você precisa fornecer suas credenciais do Firebase.
+            A conexão com o banco de dados não foi configurada corretamente.
           </p>
-          <p className="mt-4 text-gray-700">
-            <strong>Passo a passo para resolver:</strong>
+          <p className="mt-2 text-gray-600">
+            Por favor, crie um arquivo <strong>.env.local</strong> na raiz do projeto e adicione suas credenciais do Firebase, conforme as instruções.
           </p>
-          <ol className="list-decimal list-inside mt-2 space-y-2 text-gray-600">
-            <li>Crie um arquivo chamado <code className="bg-gray-200 text-red-700 font-mono p-1 rounded text-sm">.env.local</code> na pasta raiz do seu projeto.</li>
-            <li>Copie e cole o seguinte conteúdo nesse arquivo:</li>
-          </ol>
-          <pre className="bg-gray-100 p-4 rounded-md mt-2 text-sm text-gray-800 overflow-x-auto">
-            <code>
-{`VITE_FIREBASE_API_KEY="SUA_API_KEY"
-VITE_FIREBASE_AUTH_DOMAIN="SEU_AUTH_DOMAIN"
-VITE_FIREBASE_DATABASE_URL="SUA_DATABASE_URL"
-VITE_FIREBASE_PROJECT_ID="SEU_PROJECT_ID"
-VITE_FIREBASE_STORAGE_BUCKET="SEU_STORAGE_BUCKET"
-VITE_FIREBASE_MESSAGING_SENDER_ID="SEU_MESSAGING_SENDER_ID"
-VITE_FIREBASE_APP_ID="SEU_APP_ID"`}
-            </code>
-          </pre>
-          <ol className="list-decimal list-inside mt-4 space-y-2 text-gray-600" start={3}>
-              <li>Substitua os valores à direita (ex: <code className="bg-gray-200 text-red-700 font-mono p-1 rounded text-sm">"SUA_API_KEY"</code>) pelas suas credenciais reais, que você encontra no console do seu projeto Firebase.</li>
-              <li>Após salvar o arquivo, <strong>reinicie o servidor de desenvolvimento</strong> para que as alterações tenham efeito.</li>
-          </ol>
         </div>
       </div>
     );
